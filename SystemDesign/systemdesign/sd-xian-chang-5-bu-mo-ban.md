@@ -103,11 +103,12 @@ Read : Write = 100 : 1
 
 
 
-### Step 2: Core entities (2min)
+### Step 2: Core Entities（约 2 分钟
 
-> **Core Entities = 系统世界里的核心名词。为了描述这个产品，哪些“人、物、关系、记录”是不可缺少的名词？**
-
-### Step 2: Core Entities（约 2 分钟）— 私人笔记模板
+> **Core Entities = 系统世界里的核心名词(nouns, not verbs)。为了描述这个产品，哪些“人、物、关系、记录”是不可缺少的名词？**
+>
+> 话术：\
+> I am not going to list off the full data model or any schema just yet, I will do that in my high level design for explicit rows, columns
 
 #### Thinking pattern
 
@@ -137,17 +138,6 @@ Core entities:
 - [important record/event, only if required]
 ```
 
-#### Rules
-
-> **Start with nouns, not verbs.**\
-> 先找名词，不讨论动作。
-
-> **Start small: 2–5 entities.**\
-> 先写 2–5 个，不要列完整数据模型。
-
-> **Add entities later when a requirement demands them.**\
-> 后面发现一个 requirement 需要新对象，再加。
-
 #### Interview sentence
 
 > Before jumping into the design, I’ll identify the core entities: the main actors, the primary resource, and any relationships or records that must be persisted. This is an initial model, and I’ll refine it as requirements become clearer.
@@ -156,7 +146,7 @@ Core entities:
 
 #### Goal
 
-> **Turn each functional requirement into an external contract.**\
+> **Turn each functional requirement into an external facing contract.**\
 > 把每一条 functional requirement 变成客户端和系统之间的接口合同。
 
 #### 1. Choose API type
@@ -174,7 +164,7 @@ Use RPC when: Action-oriented protocol (like gRPC) that's faster than REST for s
 
 **选择 REST：**
 
-> For the external client-facing interface, I’ll use HTTP with a RESTful API design since the core operations are resource-oriented. I’ll now go through each functional requirement and define the minimum endpoint or endpoints required to support it, using our core entities as the request and response objects.
+> The api interface is the contract layer we define between our client and server. For the external client-facing interface, I’ll use HTTP with a RESTful API design since the core operations are resource-oriented. I’ll now go through each functional requirement and define the minimum endpoint or endpoints required to support it, using our core entities as the request and response objects.
 
 **选择 RPC：**
 
@@ -201,27 +191,20 @@ For user management, we will assume user has logged in with email and passcode. 
 
 ```
 # user gives a long url and will return a short one. 
-POST /urls
+POST /urls  -> return 200 OK with "shorturl.com"
 Authorization: Bearer <access_token>
-Content-Type: application/json
-
 {
-  "longUrl": "https://longurl.com",
-  "alias": "uniqueAlias",
-  "expiresAt": "2026-02-13T00:00:00Z" # ISO timestamp
-}
-
-return 200 OK
-{shortenurl: "shortenurl.com"}
+  longUrl,
+  alias?,
+  expiredAt? # ISO timestamp
+} 
 ```
 
 The service looks up that code and returns `302 Found` with a `Location` header pointing to the original URL, so the browser redirects automatically.
 
 ```
-GET /{shortcode}
-
-HTTP/1.1 302 Found
-Location: https://originallongurl.com   # Location is a standard HTTP response header
+GET /{shortcode} -> return HTTP 302 Found, with Location: https://originallongurl.com
+   # Location is a standard HTTP response header
 ```
 
 #### 3. Add comments only when needed
@@ -241,6 +224,10 @@ POST /v1/[resources]/{id}/[action]
 > **GOAL: Turn APIs into the smallest complete architecture.**\
 > 把已定义的 APIs 变成一个能跑通的、最简单的端到端架构。
 >
+> Before I dive deep, I’ll first establish a high-level, black-box architecture to make sure we have a complete baseline that satisfies all core functional requirements. I’ll keep the components intentionally simple for now. Then, once the end-to-end flows are all set, I’ll come back to the most important non-functional requirements, constraints, and potential bottlenecks in the deep dives.
+
+
+
 > **Draw → Trace → State → Strengthen → Park**\
 > 先画 → 走请求 → 标状态 → 补约束 → 留深挖
 
