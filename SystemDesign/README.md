@@ -27,7 +27,7 @@ layout:
 
 The OSI model (Open Systems Interconnection model) is a networking framework that explains how data travels from one computer to another over a network. It divides network communication into 7 layers, each with a specific responsibility.For your system design interview, think of it as a way to understand where networking problems happen and how protocols work together.
 
-<figure><img src=".gitbook/assets/image.png" alt=""><figcaption></figcaption></figure>
+<figure><img src=".gitbook/assets/image (1).png" alt=""><figcaption></figcaption></figure>
 
 The three layers to focus on for system design interviews
 

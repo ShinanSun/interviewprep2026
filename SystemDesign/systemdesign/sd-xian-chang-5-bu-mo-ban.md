@@ -3,7 +3,7 @@
 **Need → Things → Contract → Flow → Boxes → Risks**\
 要什么 → 有什么对象 → 怎么调用 → 怎么流动 → 架构盒子 → 风险与优化
 
-<figure><img src="../.gitbook/assets/image (1).png" alt=""><figcaption></figcaption></figure>
+<figure><img src="../.gitbook/assets/image (1) (1).png" alt=""><figcaption></figcaption></figure>
 
 ### Step 1: Requirements（约 5 分钟）
 
@@ -222,13 +222,9 @@ POST /v1/[resources]/{id}/[action]
 # and what happens if the action was already performed.
 ```
 
-
-
-
-
 ### Step 4:
 
-
+<figure><img src="../.gitbook/assets/image.png" alt=""><figcaption></figcaption></figure>
 
 
 
