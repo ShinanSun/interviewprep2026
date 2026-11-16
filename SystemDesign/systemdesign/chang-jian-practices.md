@@ -2,6 +2,27 @@
 
 
 
+Cache / active working data → RAM
+
+* Read < 1ms
+* Write < 1ms
+* Throughput for read/write: 100k QPS per instance for in-memory caches like ElastiCache Redis.
+* Memory-bound (up to 1TB)
+
+\
+Database files / durable data → SSD
+
+* Read \~5ms || Read throughput  \~50k TPS
+* Write \~10ms | | Write throughput \~10k TPS
+* 64 TiB+ storage capacity
+
+
+
+App Server compute:\
+\- 1k RPS per instance&#x20;
+
+
+
 
 
 ### 1. 如何保证生产Global unique ID ？ Snowflake-style ID

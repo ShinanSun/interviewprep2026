@@ -363,7 +363,13 @@ Decision:
 
 > I’ll choose \[A] because it protects our most important requirement, \[X]. The trade-off is \[Y], which is acceptable because \[reason].
 
-#### 5. Update: make the diagram reflect the decision
+#### 3. Update: make the diagram reflect the decision
+
+**scaling and number of nodes;** Say: "in the modern distributed cloud architecture, we will assume we have configured the cluster of nodes and they will auto scale as the traffic comes, and we will configure with CPU limits and RAM limits  (70%) and maybe our BottleNeck on Instance request per second to add the safety net here. In real practice, we will define our scale out and scale in strategy depends on our requirements and constraints. &#x20;
+
+
+
+Do we need to shard the DDB? do the calculation and decide if the DB of choice need to be scaled at certain layer.&#x20;
 
 #### Senior-level habit
 
