@@ -1,10 +1,10 @@
-# 常见practice
+# 常见 practices
 
 
 
 
 
-### 如何保证生产Global unique ID ？ Snowflake-style ID
+### 1. 如何保证生产Global unique ID ？ Snowflake-style ID
 
 Snowflake-style ID 最早来自 **Twitter（现在的 X）在 2010 年公开的 Snowflake 项目**。Twitter 当时需要为大量 Tweet 等对象生成 ID，但传统数据库的 auto-increment ID 很难在多台机器、多个数据中心同时扩展：大家都去请求同一个 counter，会形成中心化瓶颈和单点风险。 Annotation 1 ([blog.x.com](https://blog.x.com/en/engineering/announcing-snowflake), [github.com](https://github.com/twitter-archive/snowflake))
 

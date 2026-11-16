@@ -14,9 +14,7 @@
 
 #### 1. Functional requirements：用户要做什么
 
-<mark style="color:$warning;">只选最重要的 3 件事</mark>。句式固定为：
-
-> Users should be able to ...
+<mark style="color:$warning;">只选最重要的 3 件事</mark>。句式固定为：Users should be able to ...
 
 Short URL 例子：
 
@@ -26,7 +24,11 @@ Short URL 例子：
 
 面试现场可以说：
 
-> I’ll focus on URL creation and fast redirection as the core flows. I’ll treat analytics, custom aliases, and abuse detection as follow-up features if time permits.
+> I’ll focus on URL creation and fast redirection as the core flows. I’ll exclude&#x20;
+>
+> * User authentication and account management.
+>
+> &#x20;analytics as follow-up features if time permits.
 
 {% hint style="info" %}
 Keep your requirements targeted! The main objective in the remaining part of the interview is to develop a system that meets the requirements you've identified -- so it's crucial to be strategic in your prioritization.
@@ -45,6 +47,18 @@ Short URL 例子：
   * Write Latency on url creation, should be reponsilve, can tolerance with p99 < 300-500ms
 * <mark style="background-color:$primary;">Scalable</mark> to 1B urls and 100M DAU
 
+{% hint style="info" %}
+还有一个可以callout 的characteristics： The System **read-to-write ratio**&#x20;
+
+is the system heavily gravitate towards reads, as users frequently access shortened URLs, while the creation of new short URLs is comparatively rare.
+{% endhint %}
+
+> 话术；
+>
+> Regarding the CAP therom, Paritition tolerence is almost always the requirement for modern distributed system. I will certianly pick that first. Then the question becomes to "does our system need strong consistency or high availability? Mostly, I would question if a system need a strong Read after Write consistency? such that if our system is not reading the latest write updates, it breaks or fails in some ways. Example like banking, ticketing book the latest ticket.&#x20;
+>
+> For the nature of our system, its totally acceptable to have seconds or minutes of lagging/system refresh as long as we reached eventaul consistency. So, i am going to priorize High Availability >> consistency.
+
 
 
 **Only PICK 3 that are most relevant to your system.**
@@ -60,9 +74,9 @@ Short URL 例子：
 
 #### 3. Capacity estimation：只算会改变设计的数字
 
-口诀：
+Back the envolop estimations: 话术：
 
-> **Do math only when it changes a design choice.**
+> **Regarding to the Capcity Estimation and Calculation, I will not to do the math upfront, I will do that math during my HLD and deep dives when I need to make a decision. So, my calculation can directly inform a design decision and its serving its purpose.**&#x20;
 
 在我们的题目里，read-heavy 这个结论会直接导向：**cache / CDN + horizontally scalable storage**，所以值得算。
 
@@ -85,13 +99,9 @@ Read : Write = 100 : 1
 
 > **Build a durable URL mapping service where users create short links, and visitors are redirected with low latency and high availability at massive read scale.**
 
-下一步我们可以把这个需求直接压缩成 **Core Entities** 的好记版本。
 
 
 
-
-
-#### Non-functional Requirements
 
 ### Step 2: Core entities (2min)
 
@@ -222,14 +232,154 @@ POST /v1/[resources]/{id}/[action]
 # and what happens if the action was already performed.
 ```
 
-### Step 4:
+### Step 4: High-Level Design（10–15 min)
 
 <figure><img src="../.gitbook/assets/image.png" alt=""><figcaption></figcaption></figure>
 
+#### Memory pattern
+
+> **GOAL: Turn APIs into the smallest complete architecture.**\
+> 把已定义的 APIs 变成一个能跑通的、最简单的端到端架构。
+>
+> **Draw → Trace → State → Strengthen → Park**\
+> 先画 → 走请求 → 标状态 → 补约束 → 留深挖
+
+#### 1. Draw: draw the simplest baseline
+
+```
+Client → Entry/API → Service → Primary Storage
+```
+
+先只画满足核心功能的最少组件。
+
+> I’ll start with the simplest design that supports the core APIs, then evolve it only where requirements demand it.
+
+#### 2. Trace: go API by API
+
+对每个 core API，走一遍 happy path：Let me walk through the request flow for this API end to end.
+
+```
+Request enters where?
+→ Which component handles it?
+→ Which data does it read or write?
+→ What response returns?
+```
+
+#### 3. State: say what changes and who owns it
+
+每遇到 storage，就标注：
+
+```
+Entity / key & value:
+- What is stored?
+- Read or write?
+- Which service owns this state?
+```
+
+> **Add components only for a reason:** 每加一个 box，都说：I’m adding \[component] because \[specific requirement / bottleneck].
+
+```
+Low-latency read   → Cache / CDN
+Durable data       → Persistent DB + replication
+Async side effect  → Queue + worker
+Large objects      → Object storage
+Search             → Search index
+Real-time updates  → WebSocket / SSE
+High traffic/data  → Partitioning / sharding
+```
 
 
-### Step 5:
 
+#### 4. Park: mark, don’t prematurely solve
 
+发现复杂问题时，先标下来："This is an important trade-off; I’ll park it for a deep dive after the baseline is complete."
+
+```
+Deep dives:
+- hot keys
+- cache invalidation
+- sharding
+- retries / idempotency
+- consistency
+- failure handling
+```
+
+#### Final self-check
+
+```
+□ Every core API has an end-to-end request path.
+□ Every important entity has a home in storage.
+□ I stated what data is read or changed.
+□ Every extra component has a clear reason.
+□ I kept non-critical work off the critical path.
+□ I identified 2–3 meaningful deep-dive risks.
+```
+
+### Step 5: Deep Dives（约 10 min）
+
+**NFR + HLD parking lot → 找 bottleneck → deep dive**
+
+```
+1. Non-functional requirements (之前选好的）
+2. HLD 时 parked 的 risks / open questions （选好的）
+3. Product semantics / invariants：功能在边界条件下仍是否“正确”。
+例如重复请求、并发修改、顺序、过期、删除、权限。这些不一定被完整写进 NFR，但常常决定系统是否正确。
+
+4. Operational reality：系统上线后如何观测、扩容、降级、发布和控制成本。Senior/Staff 讨论里，这部分很容易拉开差距；但不必主动展开所有内容，只在它影响核心风险时提。资深面试框架普遍强调：选 2–3 个组件做压力测试、故障模式和成本/运行层面的推理，而不是泛泛罗列技术。
+```
+
+#### Goal
+
+> **Proactively find and resolve the design’s highest-risk bottlenecks.**\
+> 主动找出最可能让系统无法满足需求的地方，并讲清解决方案与取舍。
+
+#### 1. Identify deep-dive topics
+
+```
+From NFRs:
+- Low latency       → critical path, cache, tail latency
+- High scale        → throughput, storage, hot keys, sharding
+- High availability → failover, dependency failures, retries
+- Strong correctness→ concurrency, duplicates, idempotency
+- Durability        → replication, recovery, data loss
+- Security          → auth, abuse, rate limit
+```
+
+```
+□ Scale: throughput, storage growth, hot partitions/keys
+□ Latency: critical path, sync calls, cache, tail latency
+□ Correctness: duplicates, ordering, concurrency, idempotency
+□ Availability: replicas, failover, dependency outage, retries
+□ Data: durability, deletion/expiry, backup/recovery
+□ Security: auth, authorization, abuse/rate limits
+```
+
+> Based on our requirements and the risks I parked during the high-level design, the highest-priority deep dives are \[X], \[Y], and \[Z]. They have the largest impact on user experience and system reliability.
+
+#### 2. Provide solution and compare options
+
+```
+Problem:
+- [...]
+
+Option A:
+- Benefit:
+- Cost:
+
+Option B:
+- Benefit:
+- Cost:
+
+Decision:
+- Choose [...] because it best satisfies [...]
+```
+
+> I’ll choose \[A] because it protects our most important requirement, \[X]. The trade-off is \[Y], which is acceptable because \[reason].
+
+#### 5. Update: make the diagram reflect the decision
+
+#### Senior-level habit
+
+> **Do not just name a component. State the failure mode, the evidence/assumption, the chosen trade-off, and how the architecture changes. Use NFRs and parked questions to find risks; solve the few risks that determine whether the design succeeds.**
 
 [^1]: Define 就好了， 不要包含计算。 计算留给HLD. Define 的时候default 用P99
